@@ -3,9 +3,7 @@
 <title>STyleTransferBrowser</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script>
-    
-</script>
+
 <style>
     * { margin:0; padding:0; } /* to remove the top and left whitespace */
 
@@ -27,8 +25,11 @@
     }
 </style>
 <body>
-    <input type="file" accept="image/*" capture="camera" />
-    <canvas id="imageTaken" width="" height=""></canvas>
+    <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event)"/>
+    <img id="contimg" src="" style="width:100%">
+    <canvas id="imageTaken" width="" height="" ></canvas>
+    
 </body>
-
+<script src="main.js"></script>
+<script src="D1.js"></script>
 </html>
