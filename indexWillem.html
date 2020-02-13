@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<title>STyleTransferBrowser</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+    * { margin:0; padding:0; } /* to remove the top and left whitespace */
+
+    html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+
+    canvas { display:block; } /* To remove the scrollbars */
+
+
+    /* to show the canvas bounds */
+    #first {
+    width: auto;
+    border: 1px solid black;
+    overflow: auto; 
+    height: auto;
+    }
+    #second {
+    width: auto;
+    border: 1px solid black;
+    overflow: auto; 
+    height: auto;
+    }
+    #left {
+        width: 50%;
+        float:left;
+        border: 1px solid black;
+    }
+    #right {
+       border: 1px solid black;
+        overflow: hidden;
+    }
+    .button {
+        width: auto;
+        height: auto;
+        background-color: #a7a9b7; /* Green */
+        border: black;
+        color: #000000;
+        padding: 5px 17px;
+        vertical-align: top;
+    }
+</style>
+<body>
+    <div class="row" id="first">
+        <div class = "column" id = "left">
+            <img id="contimg" src="" style="width:100%">
+            <canvas id="contentCanvas" width="100%" height="100" ></canvas>
+            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event,'#contimg','#contentCanvas')"/>  
+        </div>
+        <div class = "column" id = "right">
+            <img id="styleimg" src="" style="width:100%">
+            <canvas id="styleCanvas" width="100" height="100" ></canvas>
+            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event, '#styleimg', '#styleCanvas')"/>  
+        </div>
+    </div>
+    <div class= "row" id= "second">
+        <button onclick="transfer()">Start transfer</button>
+        <img id="resimg" src="" style="width:100%">
+        <canvas id="resCanvas" width="100" height="100" ></canvas>
+    </div>
+
+    
+    
+</body>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="D1.js"></script>
+<script src="main.js"></script>
+</html>
