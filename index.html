@@ -25,9 +25,23 @@
     }
 </style>
 <body>
-    <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event)"/>
-    <img id="contimg" src="" style="width:100%">
-    <canvas id="imageTaken" width="" height="" ></canvas>
+    <div class="row" id="first">
+        <div class = "column" id = "left">
+            <img id="contimg" src="" style="width:100%">
+            <canvas id="contentCanvas" width="" height="" ></canvas>
+            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event)"/>
+    
+        </div>
+        <div class = "column" id = "right">
+            <img id="styleimg" src="" style="width:100%">
+            <canvas id="styleCanvas" width="" height="" ></canvas>
+            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event)"/>
+    
+        </div>
+
+    </div>
+
+    
     
 </body>
 <script src="main.js"></script>
