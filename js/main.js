@@ -233,10 +233,19 @@ function takeSnapshot() {
       }, 'image/jpeg');
     });
   }
-
+  const model = new mi.ArbitraryStyleTransferNetwork();
   // some API's (like Azure Custom Vision) need a blob with image data
   getCanvasBlob(canvas).then(function(blob) {
-    // do something with the image blob
+    var style = document.getElementById('styleimg')
+    model.initialize().then(() => {
+      stylize(style,blob);
+    });
+  });
+}
+
+async function stylize(style,cont) {
+  model.stylize(contentImg, styleImg).then((imageData) => {
+    //ctx.putImageData(imageData, 0, 0);
   });
 }
 
