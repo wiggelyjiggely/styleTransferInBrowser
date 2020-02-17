@@ -1,73 +1,264 @@
-<!DOCTYPE html>
 <html>
-<title>STyleTransferBrowser</title>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-    * { margin:0; padding:0; } /* to remove the top and left whitespace */
+    <head>
+      <title>Augmented Reality Marker Detector</title>
+      <body style="font-family: monospace;">
+        <center>
+          <div style="margin: 10px;"><strong>-= Augmented Reality Marker Detector =-</strong></div>
+          <video id="video" autoplay="true" style="display:none;"></video>
+          <canvas id="canvas" style="width:640px; height:480px;"></canvas>
+          <canvas id="imageDetected"></canvas>
+          <button id="takepic" >Take pic</button>
+          <button id="isPicOke">Picture oke</button>
+          <input type = "file" accept="image/*" onchange="uploadStyle(event)">
+          <canvas id="last"></canvas>
+          <img id = 'styleimg' src = ''style="display:none;" onload="resize(this)"/>
+          <img id = 'contimg' src = '' style="display:none;" onload="resize(this)"/>
+          
+        </center>
+      </body>
+      <script type="text/javascript" src="polyfill.js"></script>       
+      <script type="text/javascript" src="cv.js"></script> 
+      <script type="text/javascript" src="aruco.js"></script> 
+      <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/@magenta/image@^0.2.1"></script>
 
-    html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+      <script>
+        var video, canvas, context, imageData, detector,model, wz, hz, x1, yz;;
+        const maxWidth = 300;
+        const maxHeight = 300;
+        var timeForDetection = false;
 
-    canvas { display:block; } /* To remove the scrollbars */
+        function onLoad(){
+          model = new mi.ArbitraryStyleTransferNetwork();
+          video = document.getElementById("video");
 
+          canvas = document.getElementById("canvas");
+          context = canvas.getContext("2d");
+        
+          canvasRes = document.getElementById("imageDetected");
+          contextRes = canvasRes.getContext("2d");
 
-    /* to show the canvas bounds */
-    #first {
-    width: auto;
-    border: 1px solid black;
-    overflow: auto; 
-    height: auto;
-    }
-    #second {
-    width: auto;
-    border: 1px solid black;
-    overflow: auto; 
-    height: auto;
-    }
-    #left {
-        width: 50%;
-        float:left;
-        border: 1px solid black;
-    }
-    #right {
-       border: 1px solid black;
-        overflow: hidden;
-    }
-    .button {
-        width: auto;
-        height: auto;
-        background-color: #a7a9b7; /* Green */
-        border: black;
-        color: #000000;
-        padding: 5px 17px;
-        vertical-align: top;
-    }
-</style>
-<body>
-    <div class="row" id="first">
-        <div class = "column" id = "left">
-            <img id="contimg" src="" style="width:100%">
-            <canvas id="contentCanvas" width="100%" height="100" ></canvas>
-            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event,'#contimg','#contentCanvas')"/>  
-        </div>
-        <div class = "column" id = "right">
-            <img id="styleimg" src="" style="width:100%">
-            <canvas id="styleCanvas" width="100" height="100" ></canvas>
-            <input type="file" accept="image/*" capture="camera" onchange="loadContentImage(event, '#styleimg', '#styleCanvas')"/>  
-        </div>
-    </div>
-    <div class= "row" id= "second">
-        <button onclick="transfer()">Start transfer</button>
-        <img id="resimg" src="" style="width:100%">
-        <canvas id="resCanvas" width="100" height="100" ></canvas>
-    </div>
+          canvasReswidth = parseInt(canvas.style.width*2);
+          canvasRes.height = parseInt(canvas.style.height*2); 
 
+          canvas.width = parseInt(canvas.style.width);
+          canvas.height = parseInt(canvas.style.height);
+
+          canvasTemp = document.getElementById("last");
+          contextTep = canvasTemp.getContext("2d");
+          
+
+          if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+          }
+          
+          if (navigator.mediaDevices.getUserMedia === undefined) {
+            navigator.mediaDevices.getUserMedia = function(constraints) {
+              var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+              
+              if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+              }
     
+              return new Promise(function(resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject);
+              });
+            }
+          }
+          
+          navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(function(stream) {
+              if ("srcObject" in video) {
+                video.srcObject = stream;
+              } else {
+                video.src = window.URL.createObjectURL(stream);
+              }
+            })
+            .catch(function(err) {
+              console.log(err.name + ": " + err.message);
+            }
+          );
+            
+          detector = new AR.Detector();
     
-</body>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js"></script>
-<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-<script src="D1.js"></script>
-<script src="main.js"></script>
-</html>
+          requestAnimationFrame(tick);
+        }
+        
+        function tick(){
+          requestAnimationFrame(tick);
+          
+          if (video.readyState === video.HAVE_ENOUGH_DATA){
+            snapshot();
+            if (timeForDetection == false){
+              allign();
+            }else{
+              var markers = detector.detect(imageData);
+              placeOnDetection(markers);
+            }     
+          }
+        }
+
+        function placeOnDetection(markers){
+          if (markers.length !=0){
+            var corners, corner, i, j;
+            context.lineWidth = 5;
+            for (i = 0; i != markers.length; i++){
+              corners = markers[i].corners;
+              var angle = Math.atan2(corners[1].y-corners[0].y,corners[1].x-corners[0].x);
+              
+              x1 = corners[2].x;
+              y1 = corners[2].y;
+              var markersize = Math.sqrt((x1- corners[1].x)**2+(y1 - corners[1].y)**2);
+              var offsetX = 3*markersize;
+              var offsetY = 4*markersize;          
+              var points = getRectFourPoints(x1,y1,-offsetX,offsetY,angle); 
+              point(x1,y1,context)
+            }
+          }
+        }
+        function point(x, y, canvas){
+          canvas.strokeStyle = "yellow";
+          canvas.beginPath();
+          canvas.moveTo(x-2, y-2);
+          canvas.lineTo(x+2, y+2);
+          canvas.moveTo(x-2, y+2);
+          canvas.lineTo(x+2, y-2);
+          canvas.stroke();
+        }
+
+      function getRectFourPoints(x,y, width, height, ang, isDeg = false) {          
+        if(isDeg) ang = ang * (Math.PI / 180)
+        const points = {first: {x,y}}
+        const sinAng = Math.sin(ang)	
+        const cosAng = Math.cos(ang)
+        let upDiff = sinAng * width
+        let sideDiff = cosAng * width
+        const sec = {x: x + sideDiff, y: y + upDiff}
+        points.sec = sec
+        upDiff = cosAng * height
+        sideDiff = sinAng * height
+        points.third = {x: x + sideDiff, y: y - upDiff}        
+        const fourth = {x: sec.x + sideDiff, y: sec.y - upDiff}
+        points.fourth = fourth
+        return points
+      }
+
+        function allign(){
+          wid = canvas.width;
+          hei = canvas.height;
+          
+          framesize = 10;
+
+          x1 = wid/5;
+          y1 = hei/5;
+
+          x2 = wid*4/5;
+          y2 = hei*4/5;
+
+          x3 = wid/5;
+          y3 = hei*4/5;
+
+          x4 = wid*4/5;
+          y4 = hei/5;
+
+          wz = x2-x1;
+          hz = y2-y1;
+
+
+          context.beginPath();
+          context.lineWidth = "3";
+          context.strokeStyle = "red";
+
+          context.moveTo(x1,y1);
+          context.lineTo(x1+framesize,y1);
+          context.moveTo(x1,y1);
+          context.lineTo(x1,y1+framesize);
+
+          context.moveTo(x2,y2);
+          context.lineTo(x2-framesize,y2);
+          context.moveTo(x2,y2);
+          context.lineTo(x2,y2-framesize);
+
+          context.moveTo(x3,y3);
+          context.lineTo(x3+framesize,y3);
+          context.moveTo(x3,y3);
+          context.lineTo(x3,y3-framesize);
+
+          context.moveTo(x4,y4);
+          context.lineTo(x4-framesize,y4);
+          context.moveTo(x4,y4);
+          context.lineTo(x4,y4+framesize);
+
+          context.stroke();
+          context.closePath();
+
+        }
+    
+        function snapshot(){
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        }
+              
+        function uploadStyle(event){
+          styleImg = document.getElementById("styleimg");
+          styleImg.src =  URL.createObjectURL(event.target.files[0])
+        }
+
+        function resize(img){
+          dim = calculateAspectRatioFit(img.width, img.height,maxWidth,maxHeight)
+          img.width = dim.width;
+          img.height = dim.height;
+        }
+  
+        function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
+          var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
+          return { width: srcWidth*ratio, height: srcHeight*ratio };
+        }
+
+        $("#takepic").click(function () {
+          canvasRes.width = wz;
+          canvasRes.height = hz;
+          contextRes.drawImage(canvas,-x1,-y1)
+          contentImg = document.getElementById("contimg");
+          contentImg.width = wz;
+          contentImg.height = hz;
+          contentImg.src = canvasRes.toDataURL();
+        });
+
+        $("#isPicOke").click(function () {
+          canvasRes.width = 0;
+          canvasRes.height = 0;
+          timeForDetection = true;
+          model.initialize().then(() => {
+            stylize();
+          });
+        });
+
+        async function clearCanvas() {
+          // Don't block painting until we've reset the state.
+          await mi.tf.nextFrame();
+          contextTep.clearRect(0, 0, canvasTemp.width, canvasTemp.height);
+          await mi.tf.nextFrame();
+        }
+
+          async function stylize() {
+            await clearCanvas();          
+            // Resize the canvas to be the same size as the source image.
+            contentImg = document.getElementById("contimg");
+            styleImg = document.getElementById("styleimg");
+
+            canvasTemp.width = contentImg.width;
+            canvasTemp.height = contentImg.height;
+            
+            // This does all the work!
+            model.stylize(contentImg, styleImg).then((imageData) => {
+              contextTep.putImageData(imageData, 0, 0);
+            });
+          }
+        window.onload = onLoad;
+      </script>
+    
+    </head>
+    </html>
