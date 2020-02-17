@@ -1,11 +1,16 @@
 <html>
     <head>
       <title>Augmented Reality Marker Detector</title>
+      <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
       <body style="font-family: monospace;">
+        <style>
+        
+        </style>
         <center>
           <div style="margin: 10px;"><strong>-= Augmented Reality Marker Detector =-</strong></div>
-          <video id="video" autoplay="true" style="display:none;"></video>
-          <canvas id="canvas" style="width:640px; height:480px;"></canvas>
+          <video id="video" autoplay="true" style="display:none;width:100%;height:100%;"></video>
+          <canvas id="canvas"></canvas>
           <canvas id="imageDetected"></canvas>
           <button id="takepic" >Take pic</button>
           <button id="isPicOke">Picture oke</button>
@@ -28,11 +33,28 @@
         const maxHeight = 300;
         var timeForDetection = false;
 
+        function init() {
+          canvas = document.getElementById('canvas');
+          if (canvas.getContext) {
+            ctx = canvas.getContext("2d");
+  
+            window.addEventListener('resize', resizeCanvas, false);
+            window.addEventListener('orientationchange', resizeCanvas, false);
+            resizeCanvas();
+          }
+        }
+  
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerWidth*(3/4);
+        }
+        
+
         function onLoad(){
           model = new mi.ArbitraryStyleTransferNetwork();
           video = document.getElementById("video");
-
           canvas = document.getElementById("canvas");
+          
           context = canvas.getContext("2d");
         
           canvasRes = document.getElementById("imageDetected");
@@ -67,7 +89,7 @@
           }
           
           navigator.mediaDevices
-            .getUserMedia({ video: true })
+            .getUserMedia({ video: true , video: { facingMode: { ideal: 'environment' } } })
             .then(function(stream) {
               if ("srcObject" in video) {
                 video.srcObject = stream;
@@ -86,6 +108,7 @@
         }
         
         function tick(){
+          init();
           requestAnimationFrame(tick);
           
           if (video.readyState === video.HAVE_ENOUGH_DATA){
