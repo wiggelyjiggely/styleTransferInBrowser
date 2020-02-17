@@ -1,9 +1,6 @@
-var loadContentImage= function(event,imgid,canvasid){
+var loadContentImage= function(event,imgid){
     var cImg = $(imgid).get(0)
     cImg.src = URL.createObjectURL(event.target.files[0])
-    cImg.onload = function(){
-        changeCanvasSize(imgid, canvasid)
-    }
 }
 function changeCanvasSize(img, overlay){
     const myImg = $(img).get(0)
