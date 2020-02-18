@@ -4,19 +4,54 @@
       <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
        <body style="font-family: monospace;">
         <style>
-        
+          body{
+            border-style: solid;
+            border-color: #494ca2;
+            background-color: #e3e7f1;
+          }
+          #canvas{
+            position: relative;
+          }
+          #overlaycanvas{
+            position: absolute;
+            left: 9;
+            top: 9; 
+          }
+          .button{
+            background-color: #c6cbef;
+            display:inline-block;
+            padding:0.35em 1.2em;
+            border:0.1em solid #c6cbef;
+            margin:0 0.3em 0.3em 0;
+            border-radius:0.12em;
+            box-sizing: border-box;
+            text-decoration:none;
+            font-family:'Roboto',sans-serif;
+            font-weight:300;
+            color:black;
+            text-align:center;
+            transition: all 0.2s;
+          }
+          .button:hover{
+            color:#000000;
+            background-color:#494ca2;
+          }
         </style>
         <center>
-          <div style="margin: 10px;"><strong>-= Augmented Reality Marker Detector =-</strong></div>
           <video id="video" autoplay="true" style="display:none;width:100%;height:100%;"></video>
+        
           <canvas id="canvas"></canvas>
+          <canvas id="overlaycanvas"></canvas>
           <canvas id="imageDetected"></canvas>
-          <button id="takepic" >Take pic</button>
-          <button id="isPicOke">Picture oke</button>
-          <input type = "file" accept="image/*" onchange="uploadStyle(event)">
+          <div>
+            <button id="takepic" class="button">Take pic</button>
+          <button id="isPicOke" class="button">Picture oke</button>
+          <input type = "file" accept="image/*" class="button" onchange="uploadStyle(event)">
+          </div>
           <canvas id="last"></canvas>
           <img id = 'styleimg' src = ''style="display:none;" onload="resize(this)"/>
           <img id = 'contimg' src = '' style="display:none;" onload="resize(this)"/>
+          <img id = 'resimg' src = '' style="display:none;" onload="resize(this)"/>
           
         </center>
       </body>
@@ -27,10 +62,14 @@
       <script src="https://cdn.jsdelivr.net/npm/@magenta/image@^0.2.1"></script>
 
       <script>
-        var video, canvas, context, imageData, detector,model, wz, hz, x1, yz;;
+        var video, canvas, context, imageData, detector,model, wz, hz, x1, yz, imageDataRes;
+        var overlay = document.getElementById("overlaycanvas");
+        var overlayContext = overlay.getContext('2d');
         const maxWidth = 300;
         const maxHeight = 300;
         var timeForDetection = false;
+
+        var testing = false;
 
         function init() {
           canvas = document.getElementById('canvas');
@@ -46,10 +85,15 @@
         function resizeCanvas() {
           canvas.width = window.innerWidth;
           canvas.height = window.innerWidth*(3/4);
-        }
-        
+          overlay.width = window.innerWidth;
+          overlay.height = window.innerWidth*(3/4);
+          overlay.left = canvas.length;
+          overlay.top = canvas.top;
+        } 
 
         function onLoad(){
+          console.log("initialize page")
+          
           model = new mi.ArbitraryStyleTransferNetwork();
           video = document.getElementById("video");
           canvas = document.getElementById("canvas");
@@ -68,7 +112,14 @@
           canvasTemp = document.getElementById("last");
           contextTep = canvasTemp.getContext("2d");
           
+          if (testing){
+            contentImg = document.getElementById("contimg");
+            contentImg.onload = function(){
 
+            }
+            contentImg.src = "images/27913381_10213873065574278_2919627086500142994_o.jpg";
+            imageDataRes = contentImg;
+          }
           if (navigator.mediaDevices === undefined) {
             navigator.mediaDevices = {};
           }
@@ -107,22 +158,49 @@
         }
         
         function tick(){
+
           init();
           requestAnimationFrame(tick);
           
           if (video.readyState === video.HAVE_ENOUGH_DATA){
             snapshot();
-            if (timeForDetection == false){
+            if ( !testing && timeForDetection == false){
+              console.log("Take an image");
               allign();
             }else{
+              console.log("Detecting marker");
               var markers = detector.detect(imageData);
               placeOnDetection(markers);
             }     
           }
         }
+        
+        function drawId(markers){
+          var corners, corner, x, y, i, j;
+          
+          context.strokeStyle = "blue";
+          context.lineWidth = 1;
+          
+          for (i = 0; i !== markers.length; ++ i){
+            corners = markers[i].corners;
+            
+            x = Infinity;
+            y = Infinity;
+            
+            for (j = 0; j !== corners.length; ++ j){
+              corner = corners[j];
+              
+              x = Math.min(x, corner.x);
+              y = Math.min(y, corner.y);
+            }
+
+            context.strokeText(markers[i].id, x, y)
+          }
+        }
 
         function placeOnDetection(markers){
           if (markers.length !=0){
+            drawId(markers)
             var corners, corner, i, j;
             context.lineWidth = 5;
             for (i = 0; i != markers.length; i++){
@@ -131,14 +209,25 @@
               
               x1 = corners[2].x;
               y1 = corners[2].y;
+
               var markersize = Math.sqrt((x1- corners[1].x)**2+(y1 - corners[1].y)**2);
               var offsetX = 3*markersize;
-              var offsetY = 4*markersize;          
-              var points = getRectFourPoints(x1,y1,-offsetX,offsetY,angle); 
-              point(x1,y1,context)
+              var offsetY = 2*markersize;    
+              if (!testing){
+                imageDataRes = document.getElementById("last")
+              }      
+              dim = calculateAspectRatioFit(imageDataRes.width,imageDataRes.height,offsetX,offsetY)
+              var points = getRectFourPoints(x1,y1,-dim.width,dim.height,angle);    
+              //point(canvas.width/2,canvas.height/2, context)
+              overlayContext.translate(points.fourth.x,points.fourth.y);                   
+              overlayContext.rotate(angle);
+             
+              overlayContext.drawImage(imageDataRes,0,0, dim.width, dim.height);
+              point(0,0, overlayContext) 
             }
           }
         }
+
         function point(x, y, canvas){
           canvas.strokeStyle = "yellow";
           canvas.beginPath();
@@ -233,6 +322,17 @@
           img.height = dim.height;
         }
   
+        function resizeImg(imgstr, width, height){    
+          img = document.getElementById(imgstr);
+          dim = calculateAspectRatioFit(img.width,img.height,width,height)
+          var cantemp = document.createElement("canvas");
+          var ctxtemp = cantemp.getContext("2d");
+          cantemp.width = dim.width;
+          cantemp.height = dim.height;
+          ctxtemp.drawImage(img,0,0);
+          $('#resimg').attr('src', cantemp.toDataURL("image/jpeg"));        
+        }
+
         function calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight) {
           var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight);
           return { width: srcWidth*ratio, height: srcHeight*ratio };
@@ -275,7 +375,9 @@
             
             // This does all the work!
             model.stylize(contentImg, styleImg).then((imageData) => {
-              contextTep.putImageData(imageData, 0, 0);
+              //res = document.getElementById("resimg");
+              //res = imageData;
+              contextTep.putImageData(imageData, 0, 0);                   
             });
           }
         window.onload = onLoad;
