@@ -65,8 +65,8 @@
         var video, canvas, context, imageData, detector,model, wz, hz, x1, yz, imageDataRes;
         var overlay = document.getElementById("overlaycanvas");
         var overlayContext = overlay.getContext('2d');
-        const maxWidth = 300;
-        const maxHeight = 300;
+        const maxWidth = 400;
+        const maxHeight = 400;
         var timeForDetection = false;
 
         var testing = false;
@@ -82,7 +82,11 @@
           }
         }
   
+        //window.addEventListener("resize", resizeCanvas());
+
+
         function resizeCanvas() {
+          //video.videoWidth = document.getElementsByName("body").width
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           overlay.width = canvas.width;
@@ -139,7 +143,7 @@
           }
           
           navigator.mediaDevices
-            .getUserMedia({ video: true , video: { width: {ideal:document.getElementsByName("body").width}, heigth: {ideal: 1024} ,facingMode: { ideal: 'environment' }} })
+            .getUserMedia({ video: true , video: { facingMode: { ideal: 'environment' }} })
             .then(function(stream) {
               if ("srcObject" in video) {
                 video.srcObject = stream;
