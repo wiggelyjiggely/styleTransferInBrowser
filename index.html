@@ -14,8 +14,8 @@
           }
           #overlaycanvas{
             position: absolute;
-            left: 9;
-            top: 9; 
+            left: 0;
+            top: 0;
           }
           .button{
             background-color: #c6cbef;
@@ -41,7 +41,7 @@
           <video id="video" autoplay="true" style="display:none; width:100%; height:100%;"></video>
         
           <canvas id="canvas" style="width: 100%;height: auto; object-fit: cover;"></canvas>
-          <canvas id="overlaycanvas"></canvas>
+          <canvas id="overlaycanvas" style="width: 100%;height: auto; "></canvas>
           <canvas id="imageDetected"></canvas>
           <div>
             <button id="takepic" class="button">Take pic</button>
@@ -86,11 +86,10 @@
 
 
         function resizeCanvas() {
-          //video.videoWidth = document.getElementsByName("body").width
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
-          overlay.width = canvas.width;
-          overlay.height = canvas.height;
+          overlay.width = video.videoWidth;
+          overlay.height = video.videoHeight;
           overlay.left = canvas.left;
           overlay.top = canvas.top;
         } 
