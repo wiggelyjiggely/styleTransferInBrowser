@@ -217,14 +217,14 @@
                 location.reload();
               }
               // set the .src of the domElement
-                    domElement.srcObject = stream;
-
-              var event = new CustomEvent('camera-init', {stream: stream});
-              window.dispatchEvent(event);
+                    //domElement.srcObject = stream;
+                    video.src = window.URL.createObjectURL(stream);
+              //var event = new CustomEvent('camera-init', {stream: stream});
+              //window.dispatchEvent(event);
               // to start the video, when it is possible to start it only on userevent. like in android
-              document.body.addEventListener('click', function(){
-                domElement.play();
-              });
+              //document.body.addEventListener('click', function(){
+              //  domElement.play();
+             // });
             })});
           //reeeeeeeeeeeeeeeee  
           detector = new AR.Detector();
