@@ -141,7 +141,7 @@
             }
           }
           
-          navigator.mediaDevices
+          /*navigator.mediaDevices
             .getUserMedia({ video: true , video: { facingMode: { ideal: 'environment' }} })
             .then(function(stream) {
               if ("srcObject" in video) {
@@ -153,8 +153,80 @@
             .catch(function(err) {
               console.log(err.name + ": " + err.message);
             }
-          );
-            
+          );*/
+          
+            // get available devices
+          navigator.mediaDevices.enumerateDevices().then(function(devices) {
+
+            var deviceToUse = "";
+            var deviceLabel = ""; //Used to check if permissions have been accepted, enumerateDevices() runs without needing to accept permissions
+            var isAndroid = false;
+            //For android phones
+            for(var i = 0; i < devices.length; i++){
+              deviceLabel = devices[i].label;
+              if(devices[i].kind === "videoinput"){
+                if(devices[i].label.includes("0")){
+                  deviceToUse = devices[i].deviceId;
+                  isAndroid = true;
+                  break;
+                }
+              }
+            }
+            //For Iphones
+            if(isAndroid === false){
+              for(var i = 0; i < devices.length; i++){
+                if(devices[i].kind === "videoinput"){
+                  if(devices[i].label.includes("Back")){
+                    deviceToUse = devices[i].deviceId;
+                    break;
+                  }
+                }
+              }
+            }
+
+            var userMediaConstraints;
+            if(deviceToUse !== ""){
+              userMediaConstraints = {
+              audio: false,
+                video: {
+                  deviceId : deviceToUse
+                }
+              };
+            }else{
+              userMediaConstraints = {
+                audio: false,
+                video: {
+                  facingMode: 'environment',
+                  width: {
+                    ideal: _this.parameters.sourceWidth,
+                    // min: 1024,
+                    // max: 1920
+                  },
+                  height: {
+                    ideal: _this.parameters.sourceHeight,
+                    // min: 776,
+                    // max: 1080
+                  }
+                }
+              };
+            }
+            // get a device which satisfy the constraints
+            navigator.mediaDevices.getUserMedia(userMediaConstraints).then(function success(stream) {
+              //If permissions have been accepted for the first time, device label will show as ""
+              if(deviceLabel === ""){
+                location.reload();
+              }
+              // set the .src of the domElement
+                    domElement.srcObject = stream;
+
+              var event = new CustomEvent('camera-init', {stream: stream});
+              window.dispatchEvent(event);
+              // to start the video, when it is possible to start it only on userevent. like in android
+              document.body.addEventListener('click', function(){
+                domElement.play();
+              });
+            })});
+          //reeeeeeeeeeeeeeeee  
           detector = new AR.Detector();
     
           requestAnimationFrame(tick);
