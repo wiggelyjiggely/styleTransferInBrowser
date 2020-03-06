@@ -211,8 +211,6 @@
               };
             }
             // get a device which satisfy the constraints
-            });
-            
             navigator.mediaDevices.getUserMedia(userMediaConstraints).then(function success(stream) {
               if ("srcObject" in video) {
                 video.srcObject = stream;
@@ -224,6 +222,9 @@
               console.log(err.name + ": " + err.message);
             }
           );
+            });
+            
+            
           //reeeeeeeeeeeeeeeee  
           detector = new AR.Detector();
     
