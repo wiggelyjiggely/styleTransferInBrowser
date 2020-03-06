@@ -212,21 +212,18 @@
             }
             // get a device which satisfy the constraints
             });
+            
             navigator.mediaDevices.getUserMedia(userMediaConstraints).then(function success(stream) {
-              //If permissions have been accepted for the first time, device label will show as ""
-              if(deviceLabel === ""){
-                location.reload();
+              if ("srcObject" in video) {
+                video.srcObject = stream;
+              } else {
+                video.src = window.URL.createObjectURL(stream);
               }
-              // set the .src of the domElement
-                    //domElement.srcObject = stream;
-                    video.src = window.URL.createObjectURL(stream);
-              //var event = new CustomEvent('camera-init', {stream: stream});
-              //window.dispatchEvent(event);
-              // to start the video, when it is possible to start it only on userevent. like in android
-              //document.body.addEventListener('click', function(){
-              //  domElement.play();
-             // });
-            });
+            })
+            .catch(function(err) {
+              console.log(err.name + ": " + err.message);
+            }
+          );
           //reeeeeeeeeeeeeeeee  
           detector = new AR.Detector();
     
