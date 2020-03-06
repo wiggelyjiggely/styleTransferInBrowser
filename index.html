@@ -211,6 +211,7 @@
               };
             }
             // get a device which satisfy the constraints
+            });
             navigator.mediaDevices.getUserMedia(userMediaConstraints).then(function success(stream) {
               //If permissions have been accepted for the first time, device label will show as ""
               if(deviceLabel === ""){
@@ -225,7 +226,7 @@
               //document.body.addEventListener('click', function(){
               //  domElement.play();
              // });
-            })});
+            });
           //reeeeeeeeeeeeeeeee  
           detector = new AR.Detector();
     
