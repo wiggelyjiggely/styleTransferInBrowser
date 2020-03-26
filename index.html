@@ -451,12 +451,16 @@
             canvasTemp.width = contentImg.width;
             canvasTemp.height = contentImg.height;
             
-            // This does all the work!
+            // This does all the work of transferring the style and content
+            var start = new Date().getTime();
             model.stylize(contentImg, styleImg).then((imageData) => {
               //res = document.getElementById("resimg");
               //res = imageData;
               contextTep.putImageData(imageData, 0, 0);                   
             });
+            var end = new Date().getTime();
+            var time = end - start;
+            alert('Execution time: ' + time);
           }
         window.onload = onLoad;
       </script>
